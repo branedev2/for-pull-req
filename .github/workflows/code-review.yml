@@ -15,6 +15,6 @@ jobs:
         env:
           NODE_OPTIONS: '--experimental-fetch'
         with:
-          github_token: ${{ secrets.GITHU_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           exclude_files: '*.json, *.md, *.yml' # Optional: Exclude files from the review
