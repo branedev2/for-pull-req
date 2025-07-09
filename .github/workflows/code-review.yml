@@ -1,21 +1,38 @@
-name: 'Code Review'
+name: Claude PR Assistant
 
-on: 
-  pull_request: # Trigger on pull requests
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
-  code-review:
+  claude-code-action:
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
     runs-on: ubuntu-latest
-    environment: ANTHROPIC_API_KEY
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
+      issues: read
+      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: arpitgandhi9/creview@v0.3
-        env:
-          NODE_OPTIONS: '--experimental-fetch'
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Run Claude PR Action
+        uses: anthropics/claude-code-action@beta
+        with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          exclude_files: '*.json, *.md, *.yml' # Optional: Exclude files from the review
+          # Or use OAuth token instead:
+          # claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          timeout_minutes: "60"
